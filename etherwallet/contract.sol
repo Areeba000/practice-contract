@@ -1,22 +1,44 @@
-//SPDX-License-Identifier: MIT
-pragma solidity 0.8.15;
-contract etherwallet{
-    address  payable public owner;
-    string public message;
-receive()external  payable{}
-function  getbalance()public view returns(uint){
-    return address(this).balance;
-}
-constructor(string memory _initialMessage) {
-    owner=payable(msg.sender);
-    message=_initialMessage;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-}
-modifier onlyowner{
-    require(owner==msg.sender,"not owner");
-    _;
-}
-function withdraw()public payable onlyowner {
-    owner.transfer(getbalance());
-}
+contract MessageStorage {
+    address payable public  owner;
+    string public message;
+    uint256 public updateCount;
+    enum msgplacecondition{available,rented}
+    msgplacecondition newmessage;
+
+    constructor(string memory initialMessage) {
+        owner =payable(msg.sender);
+        message = initialMessage;
+        updateCount = 0;
+        newmessage=msgplacecondition.available;
+    }
+
+    function updateMessage(string memory newMessage) public payable  {
+         require(newmessage == msgplacecondition.available,"the place is already rented");
+        if(msg.value==1 ether){
+             message = newMessage;
+        }else{
+            payable(msg.sender).transfer(msg.value);
+        }
+        updateCount ++;
+        newmessage=msgplacecondition.rented;
+
+    }
+
+    function getcondition()public view returns(msgplacecondition){
+        return newmessage;
+
+    }
+    
+    function returnplace()public{
+        newmessage = msgplacecondition.available;
+
+    }
+    function withdraw()public payable  {
+        require(owner==msg.sender,"you are not owner");
+        owner.transfer(address(this).balance);
+   }
+
 }
